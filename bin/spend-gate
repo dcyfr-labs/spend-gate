@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# spend-gate CLI: a thin wrapper over spend-gate.sh.
+# Copyright DCYFR Labs. Licensed under the Apache License, Version 2.0.
+set -u
+here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+# shellcheck source=SCRIPTDIR/../spend-gate.sh
+. "$here/../spend-gate.sh"
+
+usage() {
+  cat <<'EOF'
+usage: spend-gate <verb> [args]
+
+  check  [service] [class]     exit 0 when paused, 1 when open
+  key    [service] [class]     print what refuses (a key, or file:<marker>)
+  reason [service] [class]     print the reason of what refuses
+  set    <reason> [ttl] [scope]   pause a scope (ttl seconds, 0 = no expiry)
+  clear  [scope]               resume a scope
+  decide <percent>             print the band and the scopes it would set
+  trip   <percent>             decide, then set those scopes
+
+Scope "" is global. Configuration is by environment; see spend-gate.sh.
+EOF
+}
+
+verb="${1:-}"
+[[ $# -gt 0 ]] && shift
+case "$verb" in
+  check) spend_gate_check "$@" ;;
+  key) spend_gate_key "$@" ;;
+  reason) spend_gate_reason "$@" ;;
+  set) spend_gate_set "$@" ;;
+  clear) spend_gate_clear "$@" ;;
+  decide) spend_gate_decide "$@" ;;
+  trip) spend_gate_trip "$@" ;;
+  -h | --help | help)
+    usage
+    ;;
+  *)
+    usage >&2
+    exit 2
+    ;;
+esac
