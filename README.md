@@ -97,6 +97,18 @@ define a `spend_gate_redis` function before sourcing.
 - Per-service keys have no marker.
 - A marker with no valid `expires=` line is treated as spent.
 
+## Proof
+
+```sh
+bash proof/run.sh
+```
+
+One command, on a scratch Redis with a counting stub in place of the paid
+model. It runs six legs: under budget, tripped, Redis down, Redis restarted
+empty, cleared, and the limit (never tripped with Redis down). "Stopped" means
+the stub saw no call. `test/proof.sh` checks that the proof fails when the
+check is skipped, the budget is raised, or the marker stops restoring the key.
+
 ## Tests
 
 ```sh
