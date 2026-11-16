@@ -1,0 +1,52 @@
+# Recorded run of `bash proof/run.sh`
+# Where: GitHub Actions, job "proof", container redis:7.4-bookworm, clean checkout
+# Run:   https://github.com/dcyfr-labs/spend-gate/actions/runs/43811273271/job/133113254860
+# Code:  pull request 2 at head 2f615c6 (commit= below is that pull request's merge ref)
+
+spend-gate proof  commit=72b9c49f764aa5c7fbc347bdb8ecfedf5fac5e00  redis=7.4.12  shell=bash 5.2.15  mutate=none
+budget=100  substrate: scratch redis-server on 127.0.0.1, fixture ledger, counting stub as the model
+
+[control] spend under budget: no key, the paid call reaches the model
+    ledger: 60 spent, 60% of budget
+    ok    band: none
+    ok    keys: 
+    ok    paid call: reached
+    ok    model calls added: 1
+  => control holds
+
+[trip] spend at 96% of budget: both keys set, the paid call is refused, the model sees nothing
+    ledger: 96 spent, 96% of budget
+    ok    band: pause
+    ok    keys: proof:paused proof:paused:autonomous
+    ok    paid call: refused by proof:paused:autonomous
+    ok    model calls added: 0
+  => trip holds
+
+[redis-down] tripped and Redis unreachable: still refused, by the file marker
+    ok    redis: unreachable
+    ok    paid call: refused by file:/tmp/spend-gate-proof.LecGtm/state/paused-autonomous
+    ok    model calls added: 0
+  => redis-down holds
+
+[redis-restart] tripped and Redis restarted empty: still refused, and the keys are set again from the markers
+    ok    keys after restart, before any check: 
+    ok    paid call: refused by proof:paused:autonomous
+    ok    model calls added: 0
+    ok    keys after one check: proof:paused proof:paused:autonomous
+    ok    global key expiry kept: 43200s left of 43200s
+  => redis-restart holds
+
+[restore] cleared by hand: keys and markers gone, the paid call reaches the model again
+    ok    keys: 
+    ok    markers: 
+    ok    paid call: reached
+    ok    model calls added: 1
+  => restore holds
+
+[never-tripped] LIMIT: no marker and Redis unreachable: the paid call goes through
+    ok    paid call: reached
+    ok    model calls added: 1
+    the gate fails open here by design: an outage must not stop a fleet that was never over budget
+  => never-tripped holds
+
+RESULT: all 6 legs hold
