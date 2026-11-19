@@ -3,7 +3,11 @@
 # prefix. This module is consumed elsewhere; nothing of a consumer belongs here.
 set -u
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-pattern='(^|[^[:alnum:]])rei([^[:alnum:]]|$)|/Users/|/home/[a-z]|cost[-_]ledger|cost_kill_switch|budget-paused'
+# The private system's name is assembled from two halves so that this file,
+# which is public, does not spell it.
+name='re'
+name="${name}i"
+pattern="(^|[^[:alnum:]])${name}([^[:alnum:]]|\$)|/Users/|/home/[a-z]|cost[-_]ledger|cost_kill_switch|budget-paused"
 if grep -rnIiE "$pattern" "$root" --exclude-dir=.git --exclude=no-internal-names.sh --exclude=LICENSE; then
   echo "internal names found (above)" >&2
   exit 1
